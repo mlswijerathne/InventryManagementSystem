@@ -67,7 +67,6 @@ class Sale:
         return query_db("""
             SELECT TOP (?) * FROM view_top_selling_products
         """, [limit])
-    
     @staticmethod
     def get_sales_by_category():
         """Get sales aggregated by category"""
@@ -75,7 +74,7 @@ class Sale:
             SELECT 
                 c.name AS category_name,
                 SUM(s.quantity) AS total_quantity_sold,
-                SUM(s.quantity * s.sale_price) AS total_sales_value
+                SUM(s.quantity * s.sale_price) AS total_sales
             FROM 
                 sale s
             JOIN 
@@ -85,5 +84,5 @@ class Sale:
             GROUP BY 
                 c.name
             ORDER BY 
-                total_sales_value DESC
+                total_sales DESC
         """)

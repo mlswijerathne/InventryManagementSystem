@@ -1,0 +1,23 @@
+#root {
+  width: 100%;
+  height: 100vh;
+}
+
+/* Custom dashboard card styles */
+.dashboard-card {
+  @apply bg-white rounded-lg shadow p-5 transition-all;
+}
+
+.dashboard-card:hover {
+  @apply shadow-md;
+}
+
+/* Form styles */
+.form-input {
+  @apply block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm;
+}
+
+/* Transition effects */
+.page-transition {
+  @apply transition-opacity duration-300;
+}

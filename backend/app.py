@@ -12,7 +12,12 @@ from controllers.dashboard_controller import dashboard_bp
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+
+# Enable CORS for all routes with appropriate configuration
+CORS(app, origins="http://localhost:5173", 
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+     allow_headers=["Content-Type", "Authorization"],
+     supports_credentials=True)
 
 # Set up database connection handlers
 setup_database_connection(app)
@@ -50,6 +55,17 @@ def home():
             "dashboard": f"{config.API_PREFIX}/dashboard"
         }
     })
+
+# Add custom headers if needed
+@app.after_request
+def after_request(response):
+    return response
+
+# Handle OPTIONS requests globally
+@app.route('/<path:path>', methods=['OPTIONS'])
+@app.route('/', methods=['OPTIONS'])
+def handle_options(path=''):
+    return '', 204
 
 # Error handlers
 @app.errorhandler(404)

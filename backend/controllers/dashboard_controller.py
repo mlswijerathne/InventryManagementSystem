@@ -1,7 +1,7 @@
 """
 Dashboard controller for the Inventory Management System
 """
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from models.product import Product
 from models.sale import Sale
 

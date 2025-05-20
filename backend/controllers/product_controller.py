@@ -123,6 +123,7 @@ def get_low_stock():
         products = Product.get_low_stock()
         return jsonify({"success": True, "data": products}), 200
     except Exception as e:
+        print(f"Low stock API error: {str(e)}")  # Add logging for debugging
         return jsonify({"success": False, "error": str(e)}), 500
 
 
