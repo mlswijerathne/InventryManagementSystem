@@ -168,9 +168,8 @@ export default function SalesPage() {
       if (sortField === 'sale_date') {
         aValue = new Date(aValue).getTime();
         bValue = new Date(bValue).getTime();
-      }
-      // Handle numeric fields
-      else if (['sale_id', 'quantity', 'sale_price', 'profit'].includes(sortField)) {
+      }      // Handle numeric fields
+      else if (['sale_id', 'quantity', 'sale_price'].includes(sortField)) {
         aValue = parseFloat(aValue) || 0;
         bValue = parseFloat(bValue) || 0;
       }
@@ -194,7 +193,6 @@ export default function SalesPage() {
       return sortDirection === 'asc' ? comparison : -comparison;
     });
   };
-
   // Table columns definition
   const columns = [
     { field: 'sale_id', header: 'ID', sortable: true },
@@ -217,12 +215,6 @@ export default function SalesPage() {
       header: 'Total', 
       sortable: true,
       render: (row) => `$${calculateTotal(row.sale_price, row.quantity)}`
-    },
-    { 
-      field: 'profit', 
-      header: 'Profit', 
-      sortable: true,
-      render: (row) => `$${row.profit ? Number(row.profit).toFixed(2) : '0.00'}`
     },
   ];
 
@@ -261,28 +253,31 @@ export default function SalesPage() {
           message={alertInfo.message} 
           onClose={() => setAlertInfo(null)} 
         />
-      )}
-
-      {/* Sale form */}
+      )}      {/* Sale form */}
       {showForm && (
-        <div className="bg-white shadow sm:rounded-lg p-6 mb-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">
-            Record New Sale
-          </h2>
+        <div className="bg-white shadow-xl sm:rounded-lg p-8 mb-6 border border-gray-100">
+          <div className="flex items-center mb-6 border-b border-gray-100 pb-4">
+            <div className="p-3 rounded-full bg-blue-50 text-blue-500 mr-4">
+              <PlusIcon className="h-6 w-6" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-800">
+              Record New Sale
+            </h2>
+          </div>
           <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+            <div className="grid grid-cols-1 gap-y-6 gap-x-6 sm:grid-cols-6">
               <div className="sm:col-span-3">
                 <label htmlFor="product_id" className="block text-sm font-medium text-gray-700">
                   Product
                 </label>
-                <div className="mt-1">
+                <div className="mt-1 relative">
                   <select
                     id="product_id"
                     name="product_id"
                     value={formData.product_id}
                     onChange={handleInputChange}
                     required
-                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="focus:ring-blue-500 focus:border-blue-500 block w-full px-4 py-3 sm:text-sm border border-gray-200 rounded-lg bg-gray-50 transition-colors"
                   >
                     <option value="">Select a product</option>
                     {products.map(product => (
@@ -292,13 +287,11 @@ export default function SalesPage() {
                     ))}
                   </select>
                 </div>
-              </div>
-
-              <div className="sm:col-span-3">
+              </div>              <div className="sm:col-span-3">
                 <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">
                   Quantity
                 </label>
-                <div className="mt-1">
+                <div className="mt-1 relative">
                   <input
                     type="number"
                     name="quantity"
@@ -309,10 +302,9 @@ export default function SalesPage() {
                     value={formData.quantity}
                     onChange={handleInputChange}
                     required
-                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                  />
+                    className="focus:ring-blue-500 focus:border-blue-500 block w-full px-4 py-3 sm:text-sm border border-gray-200 rounded-lg bg-gray-50 transition-colors"                  />
                   {selectedProduct && (
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-2 text-xs text-gray-500">
                       Available stock: {selectedProduct.quantity}
                     </p>
                   )}
@@ -323,7 +315,7 @@ export default function SalesPage() {
                 <label htmlFor="sale_price" className="block text-sm font-medium text-gray-700">
                   Sale Price ($)
                 </label>
-                <div className="mt-1">
+                <div className="mt-1 relative">
                   <input
                     type="number"
                     name="sale_price"
@@ -333,16 +325,14 @@ export default function SalesPage() {
                     value={formData.sale_price}
                     onChange={handleInputChange}
                     required
-                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="focus:ring-blue-500 focus:border-blue-500 block w-full px-4 py-3 sm:text-sm border border-gray-200 rounded-lg bg-gray-50 transition-colors"
                   />
                 </div>
-              </div>
-
-              <div className="sm:col-span-3">
+              </div>              <div className="sm:col-span-3">
                 {formData.quantity && formData.sale_price && (
-                  <div className="mt-6">
-                    <div className="text-sm text-gray-500">Total:</div>
-                    <div className="text-lg font-bold">
+                  <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                    <div className="text-sm font-medium text-gray-700">Total:</div>
+                    <div className="text-xl font-bold text-blue-700">
                       ${calculateTotal(Number(formData.sale_price), Number(formData.quantity))}
                     </div>
                   </div>
@@ -350,7 +340,7 @@ export default function SalesPage() {
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end space-x-3">
+            <div className="mt-8 pt-5 border-t border-gray-100 flex justify-end space-x-4">
               <Button
                 type="button"
                 variant="outline"
@@ -358,10 +348,14 @@ export default function SalesPage() {
                   resetForm();
                   setShowForm(false);
                 }}
+                className="border-gray-300 text-gray-700 hover:bg-gray-50 px-5"
               >
                 Cancel
               </Button>
-              <Button type="submit">
+              <Button 
+                type="submit"
+                className="bg-blue-500 hover:bg-blue-600 px-5"
+              >
                 Record Sale
               </Button>
             </div>

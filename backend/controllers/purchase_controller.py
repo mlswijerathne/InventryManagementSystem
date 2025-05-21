@@ -41,12 +41,10 @@ def create_purchase():
         # Validate input data
         if not all(k in data for k in ["product_id", "quantity", "purchase_price"]):
             return jsonify({"success": False, "error": "Missing required fields"}), 400
-        
         product_id = data.get('product_id')
         quantity = data.get('quantity')
         purchase_price = data.get('purchase_price')
         supplier = data.get('supplier')
-        markup_factor = data.get('markup_factor', config.DEFAULT_PRICE_MARKUP)
         
         # Validate numeric values
         if not isinstance(quantity, (int, float)) or quantity <= 0:
@@ -61,8 +59,7 @@ def create_purchase():
                 product_id, 
                 quantity, 
                 purchase_price, 
-                supplier, 
-                markup_factor
+                supplier
             )
             
             return jsonify({

@@ -263,21 +263,28 @@ export default function CategoriesPage() {
           message={alertInfo.message} 
           onClose={() => setAlertInfo(null)} 
         />
-      )}
-
-      {/* Category form */}
+      )}      {/* Category form */}
       {showForm && (
-        <div className="bg-white shadow sm:rounded-lg p-6 mb-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">
-            {isEditing ? 'Edit Category' : 'Add New Category'}
-          </h2>
+        <div className="bg-white shadow-xl sm:rounded-lg p-8 mb-6 border border-gray-100">
+          <div className="flex items-center mb-6 border-b border-gray-100 pb-4">
+            <div className="p-3 rounded-full bg-blue-50 text-blue-500 mr-4">
+              {isEditing ? (
+                <PencilIcon className="h-6 w-6" />
+              ) : (
+                <PlusIcon className="h-6 w-6" />
+              )}
+            </div>
+            <h2 className="text-xl font-semibold text-gray-800">
+              {isEditing ? 'Edit Category' : 'Add New Category'}
+            </h2>
+          </div>
           <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+            <div className="grid grid-cols-1 gap-y-6 gap-x-6 sm:grid-cols-6">
               <div className="sm:col-span-3">
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                   Category Name
                 </label>
-                <div className="mt-1">
+                <div className="mt-1 relative">
                   <input
                     type="text"
                     name="name"
@@ -285,29 +292,27 @@ export default function CategoriesPage() {
                     value={formData.name}
                     onChange={handleInputChange}
                     required
-                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="focus:ring-blue-500 focus:border-blue-500 block w-full px-4 py-3 sm:text-sm border border-gray-200 rounded-lg bg-gray-50 transition-colors"
                   />
                 </div>
-              </div>
-
-              <div className="sm:col-span-6">
+              </div>              <div className="sm:col-span-6">
                 <label htmlFor="description" className="block text-sm font-medium text-gray-700">
                   Description
                 </label>
-                <div className="mt-1">
+                <div className="mt-1 relative">
                   <textarea
                     id="description"
                     name="description"
                     rows={3}
                     value={formData.description}
                     onChange={handleInputChange}
-                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="focus:ring-blue-500 focus:border-blue-500 block w-full px-4 py-3 sm:text-sm border border-gray-200 rounded-lg bg-gray-50 transition-colors"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end space-x-3">
+            <div className="mt-8 pt-5 border-t border-gray-100 flex justify-end space-x-4">
               <Button
                 type="button"
                 variant="outline"
@@ -315,10 +320,14 @@ export default function CategoriesPage() {
                   resetForm();
                   setShowForm(false);
                 }}
+                className="border-gray-300 text-gray-700 hover:bg-gray-50 px-5"
               >
                 Cancel
               </Button>
-              <Button type="submit">
+              <Button 
+                type="submit"
+                className="bg-blue-500 hover:bg-blue-600 px-5"
+              >
                 {isEditing ? 'Update Category' : 'Create Category'}
               </Button>
             </div>

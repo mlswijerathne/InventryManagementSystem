@@ -8,9 +8,8 @@ import config
 
 class StockService:
     """Service for stock management operations"""
-    
     @staticmethod
-    def add_purchase(product_id, quantity, purchase_price, supplier=None, markup_factor=None):
+    def add_purchase(product_id, quantity, purchase_price, supplier=None):
         """
         Add a purchase to increase stock and update product price
         
@@ -19,7 +18,6 @@ class StockService:
             quantity: Quantity purchased
             purchase_price: Price per unit
             supplier: Optional supplier name
-            markup_factor: Optional markup factor for price calculation (default from config)
         
         Returns:
             purchase_id: ID of the newly created purchase
@@ -36,12 +34,8 @@ class StockService:
         if not product:
             raise ValueError(f"Product with ID {product_id} not found")
         
-        # Use default markup if not specified
-        if markup_factor is None:
-            markup_factor = config.DEFAULT_PRICE_MARKUP
-        
-        # Create purchase (the stored procedure will handle stock and price update)
-        purchase_id = Purchase.create(product_id, quantity, purchase_price, supplier, markup_factor)
+        # Create purchase (the stored procedure will handle stock and price update using product's profit percentage)
+        purchase_id = Purchase.create(product_id, quantity, purchase_price, supplier)
         
         return purchase_id
     

@@ -44,15 +44,11 @@ class Purchase:
         """, [purchase_id], True)
     
     @staticmethod
-    def create(product_id, quantity, purchase_price, supplier=None, markup_factor=None):
-        """Create a new purchase using stored procedure with price update"""
-        # Use the default markup from config if none provided
-        if markup_factor is None:
-            markup_factor = config.DEFAULT_PRICE_MARKUP
-            
+    def create(product_id, quantity, purchase_price, supplier=None):
+        """Create a new purchase using stored procedure with price update based on product's profit percentage"""
         return execute_db("""
-            EXEC sp_add_purchase ?, ?, ?, ?, ?
-        """, [product_id, quantity, purchase_price, supplier, markup_factor])
+            EXEC sp_add_purchase ?, ?, ?, ?
+        """, [product_id, quantity, purchase_price, supplier])
     
     @staticmethod
     def get_by_product(product_id):

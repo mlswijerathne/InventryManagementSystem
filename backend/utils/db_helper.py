@@ -44,6 +44,18 @@ def setup_database_connection(app):
     Args:
         app: Flask application instance
     """
+    # Run the database migration procedure to ensure product pricing fields exist
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("EXEC sp_ensure_product_pricing_fields")
+        conn.commit()
+        cursor.close()
+        conn.close()
+        print("Database schema migration completed successfully")
+    except Exception as e:
+        print(f"Error during database schema migration: {str(e)}")
+    
     @app.before_request
     def before_request():
         """Create a database connection before each request"""

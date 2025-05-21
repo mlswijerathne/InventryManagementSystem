@@ -38,17 +38,16 @@ def create_product():
     try:
         data = request.get_json()
         # Validate input data
-        if not all(k in data for k in ["name", "category_id", "price"]):
+        if not all(k in data for k in ["name", "category_id"]):
             return jsonify({"success": False, "error": "Missing required fields"}), 400
-        
         name = data.get('name')
         category_id = data.get('category_id')
-        price = data.get('price')
         quantity = data.get('quantity', 0)
         reorder_level = data.get('reorder_level', 10)
+        profit_percentage = data.get('profit_percentage', 30)
         
-        # Create product
-        product_id = Product.create(name, category_id, price, quantity, reorder_level)
+        # Create product with default prices
+        product_id = Product.create(name, category_id, 0, quantity, reorder_level, profit_percentage)
         
         return jsonify({
             "success": True, 
@@ -67,22 +66,25 @@ def update_product(product_id):
     try:
         data = request.get_json()
         # Validate input data
-        if not all(k in data for k in ["name", "category_id", "price"]):
+        if not all(k in data for k in ["name", "category_id"]):
             return jsonify({"success": False, "error": "Missing required fields"}), 400
         
         # Check if product exists
         product = Product.get_by_id(product_id)
         if not product:
             return jsonify({"success": False, "error": "Product not found"}), 404
-        
         name = data.get('name')
         category_id = data.get('category_id')
-        price = data.get('price')
         quantity = data.get('quantity', product.get('quantity', 0))
         reorder_level = data.get('reorder_level', product.get('reorder_level', 10))
+        profit_percentage = data.get('profit_percentage', product.get('profit_percentage', 30))
+        
+        # Get current price from product and preserve it
+        current_price = product.get('price', 0)
+        current_base_price = product.get('base_price', 0)
         
         # Update product
-        Product.update(product_id, name, category_id, price, quantity, reorder_level)
+        Product.update(product_id, name, category_id, current_price, quantity, reorder_level, profit_percentage, current_base_price)
         
         return jsonify({
             "success": True, 

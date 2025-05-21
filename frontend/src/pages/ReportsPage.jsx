@@ -109,19 +109,12 @@ export default function ReportsPage() {
       </div>
     );
   }
-
   // Complete error - no data available
   if (error && salesByCategory.length === 0 && topSellingProducts.length === 0 && lowStockProducts.length === 0) {
     return (
       <div className="p-4">
-        <Alert type="error" message={error} />
-        <div className="mt-4 text-center">
-          <button 
-            onClick={handleRetry}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-          >
-            Retry Loading Reports
-          </button>
+        <div className="flex items-center justify-center h-full">
+          <p className="text-gray-500">No report data available</p>
         </div>
       </div>
     );
@@ -158,14 +151,7 @@ export default function ReportsPage() {
         <p className="mt-1 text-sm text-gray-500">
           View sales and inventory analysis reports
         </p>
-      </div>
-
-      {/* Show warning if some data is missing */}
-      {error && (
-        <div className="mb-4">
-          <Alert type="warning" message={`${error} Some reports may still be available below.`} />
-        </div>
-      )}
+      </div>      {/* No error messages shown as requested */}
 
       {/* Sales by Category */}
       {salesByCategory.length > 0 ? (
@@ -306,19 +292,7 @@ export default function ReportsPage() {
             </tbody>
           </table>
         </div>
-      </div>
-
-      {/* Retry button at the bottom if there was a partial error */}
-      {(error || (!salesByCategory.length || !topSellingProducts.length || !lowStockProducts.length)) && !loading && (
-        <div className="mt-6 text-center">
-          <button 
-            onClick={handleRetry}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-          >
-            Refresh Reports
-          </button>
-        </div>
-      )}
+      </div>      {/* Refresh button removed as requested */}
     </div>
   );
 }

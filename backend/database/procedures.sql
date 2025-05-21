@@ -12,8 +12,7 @@ CREATE PROCEDURE sp_add_purchase
     @product_id INT,
     @quantity INT,
     @purchase_price DECIMAL(10, 2),
-    @supplier VARCHAR(100) = NULL,
-    @markup_factor DECIMAL(10, 2) = 1.3 -- Default 30% markup
+    @supplier VARCHAR(100) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -36,25 +35,31 @@ BEGIN
         RAISERROR('Purchase price must be greater than zero.', 16, 1);
         RETURN;
     END;
-    
-    -- Check if product exists
+      -- Check if product exists
     IF NOT EXISTS (SELECT 1 FROM product WHERE product_id = @product_id)
     BEGIN
         RAISERROR('Product does not exist.', 16, 1);
         RETURN;
     END;
     
-    -- Insert the purchase
+    -- Get the product's profit percentage
+    DECLARE @profit_percentage DECIMAL(10, 2);
+    SELECT @profit_percentage = profit_percentage FROM product WHERE product_id = @product_id;
+    
+    -- Calculate the sale price using the product's profit percentage
+    DECLARE @sale_price DECIMAL(10, 2);
+    SET @sale_price = @purchase_price * (1 + (@profit_percentage / 100));      -- Insert the purchase
     BEGIN TRY
         BEGIN TRANSACTION;
         
         INSERT INTO purchase (product_id, quantity, purchase_price, supplier, purchase_date)
         VALUES (@product_id, @quantity, @purchase_price, @supplier, GETDATE());
         
-        -- Update product quantity and price directly (instead of relying on the trigger)
+        -- Update product prices AND quantity (trigger is disabled to prevent double updates)
         UPDATE product
         SET quantity = quantity + @quantity,
-            price = @purchase_price * @markup_factor,
+            base_price = @purchase_price,
+            price = @sale_price,
             updated_at = GETDATE()
         WHERE product_id = @product_id;
         
@@ -123,16 +128,14 @@ BEGIN
     BEGIN
         RAISERROR('Not enough stock available. Current stock: %d, Requested: %d', 16, 1, @current_stock, @quantity);
         RETURN;
-    END;
-    
-    -- Insert the sale
+    END;      -- Insert the sale
     BEGIN TRY
         BEGIN TRANSACTION;
         
         INSERT INTO sale (product_id, quantity, sale_price, sale_date)
         VALUES (@product_id, @quantity, @sale_price, GETDATE());
         
-        -- The trigger trg_update_stock_on_sale will update the product quantity
+        -- Quantity update is handled by the trigger, so we don't need to update it here
         
         COMMIT TRANSACTION;
         
@@ -447,118 +450,6 @@ BEGIN
         product_name;
 END;
 GO
--- Procedure to get stock expiration alerts
-IF EXISTS (SELECT * FROM sys.procedures WHERE name = 'sp_get_stock_expiration_alerts')
-    DROP PROCEDURE sp_get_stock_expiration_alerts;
-GO
-
-CREATE PROCEDURE sp_get_stock_expiration_alerts
-    @days_warning INT = 30
-AS
-BEGIN
-    SET NOCOUNT ON;
-    
-    -- First, let's add an expiration_date column to the purchase table if it doesn't exist
-    IF NOT EXISTS (
-        SELECT 1 
-        FROM sys.columns 
-        WHERE name = 'expiration_date' 
-        AND object_id = OBJECT_ID('purchase')
-    )
-    BEGIN
-        ALTER TABLE purchase
-        ADD expiration_date DATE NULL;
-        
-        PRINT 'Added expiration_date column to purchase table.';
-    END;
-    
-    DECLARE @warning_date DATE = DATEADD(DAY, @days_warning, GETDATE());
-    
-    SELECT 
-        p.product_id,
-        pr.name AS product_name,
-        c.name AS category_name,
-        SUM(p.quantity) AS expiring_quantity,
-        MIN(p.expiration_date) AS earliest_expiration,
-        DATEDIFF(DAY, GETDATE(), MIN(p.expiration_date)) AS days_until_expiration,
-        CASE
-            WHEN MIN(p.expiration_date) <= GETDATE() THEN 'Expired'
-            WHEN MIN(p.expiration_date) <= @warning_date THEN 'Expiring Soon'
-            ELSE 'OK'
-        END AS status
-    FROM 
-        purchase p
-    JOIN 
-        product pr ON p.product_id = pr.product_id
-    JOIN 
-        category c ON pr.category_id = c.category_id
-    WHERE 
-        p.expiration_date IS NOT NULL
-        AND p.expiration_date <= @warning_date
-    GROUP BY 
-        p.product_id, pr.name, c.name
-    ORDER BY 
-        days_until_expiration ASC;
-END;
-GO
-
--- Procedure to set product expiration dates
-IF EXISTS (SELECT * FROM sys.procedures WHERE name = 'sp_set_purchase_expiration')
-    DROP PROCEDURE sp_set_purchase_expiration;
-GO
-
-CREATE PROCEDURE sp_set_purchase_expiration
-    @purchase_id INT,
-    @expiration_date DATE
-AS
-BEGIN
-    SET NOCOUNT ON;
-    
-    -- Validate input
-    IF @purchase_id IS NULL OR @expiration_date IS NULL
-    BEGIN
-        RAISERROR('Purchase ID and expiration date are required.', 16, 1);
-        RETURN;
-    END;
-    
-    -- Check if purchase exists
-    IF NOT EXISTS (SELECT 1 FROM purchase WHERE purchase_id = @purchase_id)
-    BEGIN
-        RAISERROR('Purchase does not exist.', 16, 1);
-        RETURN;
-    END;
-    
-    -- Update the expiration date
-    BEGIN TRY
-        UPDATE purchase
-        SET expiration_date = @expiration_date
-        WHERE purchase_id = @purchase_id;
-        
-        -- Return updated purchase info
-        SELECT 
-            p.purchase_id,
-            pr.name AS product_name,
-            p.quantity,
-            p.purchase_price,
-            p.purchase_date,
-            p.expiration_date,
-            DATEDIFF(DAY, GETDATE(), p.expiration_date) AS days_until_expiration
-        FROM 
-            purchase p
-        JOIN 
-            product pr ON p.product_id = pr.product_id
-        WHERE 
-            p.purchase_id = @purchase_id;
-    END TRY
-    BEGIN CATCH
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-        DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
-        DECLARE @ErrorState INT = ERROR_STATE();
-        
-        RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
-    END CATCH;
-END;
-GO
 
 -- Procedure to analyze product performance
 IF EXISTS (SELECT * FROM sys.procedures WHERE name = 'sp_analyze_product_performance')
@@ -704,8 +595,59 @@ BEGIN
         CASE
             WHEN pu.current_stock <= pu.reorder_level THEN 1
             WHEN pu.current_stock <= CAST(pu.daily_usage * (@forecast_days + @safety_stock_days + @lead_time_days) AS INT) THEN 2
-            ELSE 3
-        END,
+            ELSE 3        END,
         pu.product_name;
+END;
+GO
+
+-- Procedure to ensure base_price and profit_percentage fields are properly set
+IF EXISTS (SELECT * FROM sys.procedures WHERE name = 'sp_ensure_product_pricing_fields')
+    DROP PROCEDURE sp_ensure_product_pricing_fields;
+GO
+
+CREATE PROCEDURE sp_ensure_product_pricing_fields
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    -- Add profit_percentage column if it doesn't exist
+    IF NOT EXISTS (
+        SELECT * FROM sys.columns 
+        WHERE name = 'profit_percentage' AND object_id = OBJECT_ID('product')
+    )
+    BEGIN
+        ALTER TABLE product
+        ADD profit_percentage DECIMAL(10, 2) NOT NULL DEFAULT 30.0;
+        
+        PRINT 'Added profit_percentage column to product table';
+    END;
+    
+    -- Add base_price column if it doesn't exist
+    IF NOT EXISTS (
+        SELECT * FROM sys.columns 
+        WHERE name = 'base_price' AND object_id = OBJECT_ID('product')
+    )
+    BEGIN
+        ALTER TABLE product
+        ADD base_price DECIMAL(10, 2) NULL;
+        
+        -- Initialize base_price based on existing price with default profit percentage
+        UPDATE product
+        SET base_price = price / 1.3
+        WHERE base_price IS NULL;
+        
+        -- Make base_price not nullable after initialization
+        ALTER TABLE product
+        ALTER COLUMN base_price DECIMAL(10, 2) NOT NULL;
+        
+        PRINT 'Added base_price column to product table';
+    END;
+    
+    -- Update any products where base_price is NULL but price exists
+    UPDATE product
+    SET base_price = price / (1 + (profit_percentage / 100))
+    WHERE base_price IS NULL AND price IS NOT NULL;
+    
+    PRINT 'Product pricing fields check completed';
 END;
 GO

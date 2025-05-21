@@ -33,12 +33,48 @@ BEGIN
         name VARCHAR(100) NOT NULL,
         category_id INT NOT NULL,
         price DECIMAL(10, 2) NOT NULL,
+        base_price DECIMAL(10, 2) NOT NULL,
+        profit_percentage DECIMAL(10, 2) NOT NULL DEFAULT 30.0,
         quantity INT NOT NULL DEFAULT 0,
         reorder_level INT NOT NULL DEFAULT 10,
         created_at DATETIME DEFAULT GETDATE(),
         updated_at DATETIME DEFAULT GETDATE(),
         FOREIGN KEY (category_id) REFERENCES category(category_id)
     );
+END
+GO
+
+-- Add profit_percentage and base_price columns if they don't exist (for upgrades)
+IF NOT EXISTS (
+    SELECT * FROM sys.columns 
+    WHERE name = 'profit_percentage' AND object_id = OBJECT_ID('product')
+)
+BEGIN
+    ALTER TABLE product
+    ADD profit_percentage DECIMAL(10, 2) NOT NULL DEFAULT 30.0;
+    
+    PRINT 'Added profit_percentage column to product table';
+END
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM sys.columns 
+    WHERE name = 'base_price' AND object_id = OBJECT_ID('product')
+)
+BEGIN
+    ALTER TABLE product
+    ADD base_price DECIMAL(10, 2) NULL;
+    
+    -- Initialize base_price based on existing price with default profit percentage
+    UPDATE product
+    SET base_price = price / 1.3
+    WHERE base_price IS NULL;
+    
+    -- Make base_price not nullable after initialization
+    ALTER TABLE product
+    ALTER COLUMN base_price DECIMAL(10, 2) NOT NULL;
+    
+    PRINT 'Added base_price column to product table';
 END
 GO
 

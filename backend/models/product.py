@@ -14,8 +14,10 @@ class Product:
                 p.product_id, 
                 p.name, 
                 p.price, 
+                p.base_price,
                 p.quantity, 
                 p.reorder_level,
+                p.profit_percentage,
                 c.name AS category_name,
                 c.category_id,
                 CASE 
@@ -36,22 +38,27 @@ class Product:
                 p.product_id, 
                 p.name, 
                 p.price, 
+                p.base_price,
                 p.quantity, 
                 p.reorder_level,
+                p.profit_percentage,
                 c.name AS category_name,
                 c.category_id,
                 CASE 
                     WHEN p.quantity <= p.reorder_level THEN 'Low Stock'
                     WHEN p.quantity = 0 THEN 'Out of Stock'
-                    ELSE 'In Stock'                END AS stock_status,
+                    ELSE 'In Stock'
+                END AS stock_status,
                 (SELECT ISNULL(SUM(quantity * sale_price), 0) FROM sale WHERE product_id = p.product_id) AS total_sales,
                 (SELECT CASE 
                     WHEN AVG(purchase_price) IS NULL OR AVG(purchase_price) = 0 THEN 0
                     ELSE ((SELECT AVG(sale_price) FROM sale WHERE product_id = p.product_id) - AVG(purchase_price)) / AVG(purchase_price) * 100
-                 END FROM purchase WHERE product_id = p.product_id) AS profit_margin            FROM product p
+                 END FROM purchase WHERE product_id = p.product_id) AS profit_margin
+            FROM product p
             JOIN category c ON p.category_id = c.category_id
             WHERE p.product_id = ?
         """, [product_id], True)
+    
     @staticmethod
     def get_low_stock():
         """Get products with low stock"""
@@ -64,7 +71,8 @@ class Product:
                     c.name AS category_name,
                     p.quantity,
                     p.reorder_level,
-                    p.price
+                    p.price,
+                    p.base_price
                 FROM 
                     product p
                 JOIN 
@@ -88,29 +96,45 @@ class Product:
             import traceback
             traceback.print_exc()
             return []
-    
     @staticmethod
-    def create(name, category_id, price, quantity, reorder_level):
+    def create(name, category_id, price=0, quantity=0, reorder_level=10, profit_percentage=30):
         """Create a new product"""
+        # Calculate base price (price without profit)
+        base_price = price / (1 + (profit_percentage / 100)) if price > 0 else 0
+        
         return execute_db("""
-            INSERT INTO product (name, category_id, price, quantity, reorder_level)
-            VALUES (?, ?, ?, ?, ?)
-        """, [name, category_id, price, quantity, reorder_level])
-    
+            INSERT INTO product (name, category_id, price, base_price, quantity, reorder_level, profit_percentage)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, [name, category_id, price, base_price, quantity, reorder_level, profit_percentage])
     @staticmethod
-    def update(product_id, name, category_id, price, quantity, reorder_level):
+    def update(product_id, name, category_id, price=0, quantity=0, reorder_level=10, profit_percentage=None, base_price=None):
         """Update a product"""
+        # Get existing product data if profit_percentage is not provided
+        if profit_percentage is None:
+            product = Product.get_by_id(product_id)
+            if product:
+                profit_percentage = product.get('profit_percentage', 30)
+            else:
+                profit_percentage = 30
+        
+        # If base_price is provided, use it
+        if base_price is None:
+            # Calculate base price (price without profit)
+            base_price = price / (1 + (profit_percentage / 100)) if price > 0 else 0
+        
         execute_db("""
             UPDATE product
             SET name = ?, 
                 category_id = ?, 
-                price = ?, 
+                price = ?,
+                base_price = ?,
                 quantity = ?, 
-                reorder_level = ?
+                reorder_level = ?,
+                profit_percentage = ?,
+                updated_at = GETDATE()
             WHERE product_id = ?
-        """, [name, category_id, price, quantity, reorder_level, product_id])
+        """, [name, category_id, price, base_price, quantity, reorder_level, profit_percentage, product_id])
         return product_id
-
         
     @staticmethod
     def check_product_references(product_id):

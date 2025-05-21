@@ -15,14 +15,10 @@ AS
 BEGIN
     SET NOCOUNT ON;
     
-    -- Update product quantity and price based on the new purchase price
-    -- This will add a markup of 30% to the purchase price to set as the new selling price
-    UPDATE p
-    SET p.quantity = p.quantity + i.quantity,
-        p.price = i.purchase_price * 1.3, -- 30% markup on purchase price
-        p.updated_at = GETDATE()
-    FROM product p
-    INNER JOIN inserted i ON p.product_id = i.product_id;
+    -- IMPORTANT: This trigger is DISABLED (quantity updates moved to stored procedure)
+    -- This prevents double-updating of quantities
+    
+    PRINT 'Purchase trigger executed - QUANTITY UPDATE DISABLED';
 END;
 GO
 

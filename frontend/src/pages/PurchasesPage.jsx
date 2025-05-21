@@ -10,13 +10,11 @@ export default function PurchasesPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({
+  const [showForm, setShowForm] = useState(false);  const [formData, setFormData] = useState({
     product_id: '',
     quantity: '',
     purchase_price: '',
-    supplier: '',
-    markup_factor: '1.3',
+    supplier: ''
   });
   const [alertInfo, setAlertInfo] = useState(null);
   const [sortField, setSortField] = useState('purchase_id');
@@ -45,14 +43,13 @@ export default function PurchasesPage() {
 
     fetchData();
   }, []);
-
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     let parsedValue = value;
     
     // Convert numeric fields to numbers
-    if (name === 'purchase_price' || name === 'quantity' || name === 'markup_factor') {
+    if (name === 'purchase_price' || name === 'quantity') {
       parsedValue = value === '' ? '' : Number(value);
     }
     
@@ -61,15 +58,13 @@ export default function PurchasesPage() {
       [name]: parsedValue
     });
   };
-
   // Reset form
   const resetForm = () => {
     setFormData({
       product_id: '',
       quantity: '',
       purchase_price: '',
-      supplier: '',
-      markup_factor: '1.3',
+      supplier: ''
     });
   };
 
@@ -82,14 +77,12 @@ export default function PurchasesPage() {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    try {
+      try {
       const purchaseData = {
         product_id: Number(formData.product_id),
         quantity: Number(formData.quantity),
         purchase_price: Number(formData.purchase_price),
-        supplier: formData.supplier,
-        markup_factor: Number(formData.markup_factor),
+        supplier: formData.supplier
       };
       
       await purchasesApi.createPurchase(purchaseData);
@@ -220,35 +213,37 @@ export default function PurchasesPage() {
           message={alertInfo.message} 
           onClose={() => setAlertInfo(null)} 
         />
-      )}
-
-      {/* Purchase form */}
+      )}      {/* Purchase form */}
       {showForm && (
-        <div className="bg-white shadow sm:rounded-lg p-6 mb-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">
-            Record New Purchase
-          </h2>
+        <div className="bg-white shadow-xl sm:rounded-lg p-8 mb-6 border border-gray-100">
+          <div className="flex items-center mb-6 border-b border-gray-100 pb-4">
+            <div className="p-3 rounded-full bg-blue-50 text-blue-500 mr-4">
+              <PlusIcon className="h-6 w-6" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-800">
+              Record New Purchase
+            </h2>
+          </div>
           <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+            <div className="grid grid-cols-1 gap-y-6 gap-x-6 sm:grid-cols-6">
               <div className="sm:col-span-3">
                 <label htmlFor="product_id" className="block text-sm font-medium text-gray-700">
                   Product
                 </label>
-                <div className="mt-1">
+                <div className="mt-1 relative">
                   <select
                     id="product_id"
                     name="product_id"
                     value={formData.product_id}
                     onChange={handleInputChange}
                     required
-                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="focus:ring-blue-500 focus:border-blue-500 block w-full px-4 py-3 sm:text-sm border border-gray-200 rounded-lg bg-gray-50 transition-colors"
                   >
                     <option value="">Select a product</option>
                     {products.map(product => (
                       <option key={product.product_id} value={product.product_id}>
                         {product.name}
-                      </option>
-                    ))}
+                      </option>                    ))}
                   </select>
                 </div>
               </div>
@@ -257,23 +252,21 @@ export default function PurchasesPage() {
                 <label htmlFor="supplier" className="block text-sm font-medium text-gray-700">
                   Supplier
                 </label>
-                <div className="mt-1">
+                <div className="mt-1 relative">
                   <input
                     type="text"
                     name="supplier"
                     id="supplier"
                     value={formData.supplier}
                     onChange={handleInputChange}
-                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="focus:ring-blue-500 focus:border-blue-500 block w-full px-4 py-3 sm:text-sm border border-gray-200 rounded-lg bg-gray-50 transition-colors"
                   />
                 </div>
-              </div>
-
-              <div className="sm:col-span-2">
+              </div>              <div className="sm:col-span-2">
                 <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">
                   Quantity
                 </label>
-                <div className="mt-1">
+                <div className="mt-1 relative">
                   <input
                     type="number"
                     name="quantity"
@@ -283,16 +276,14 @@ export default function PurchasesPage() {
                     value={formData.quantity}
                     onChange={handleInputChange}
                     required
-                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="focus:ring-blue-500 focus:border-blue-500 block w-full px-4 py-3 sm:text-sm border border-gray-200 rounded-lg bg-gray-50 transition-colors"
                   />
                 </div>
-              </div>
-
-              <div className="sm:col-span-2">
+              </div>              <div className="sm:col-span-2">
                 <label htmlFor="purchase_price" className="block text-sm font-medium text-gray-700">
                   Purchase Price ($)
                 </label>
-                <div className="mt-1">
+                <div className="mt-1 relative">
                   <input
                     type="number"
                     name="purchase_price"
@@ -302,35 +293,11 @@ export default function PurchasesPage() {
                     value={formData.purchase_price}
                     onChange={handleInputChange}
                     required
-                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="focus:ring-blue-500 focus:border-blue-500 block w-full px-4 py-3 sm:text-sm border border-gray-200 rounded-lg bg-gray-50 transition-colors"
                   />
                 </div>
               </div>
-
-              <div className="sm:col-span-2">
-                <label htmlFor="markup_factor" className="block text-sm font-medium text-gray-700">
-                  Markup Factor
-                </label>
-                <div className="mt-1">
-                  <input
-                    type="number"
-                    name="markup_factor"
-                    id="markup_factor"
-                    min="1"
-                    step="0.1"
-                    value={formData.markup_factor}
-                    onChange={handleInputChange}
-                    required
-                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">
-                    Selling price will be purchase price × markup factor
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 flex justify-end space-x-3">
+            </div>            <div className="mt-8 pt-5 border-t border-gray-100 flex justify-end space-x-4">
               <Button
                 type="button"
                 variant="outline"
@@ -338,10 +305,14 @@ export default function PurchasesPage() {
                   resetForm();
                   setShowForm(false);
                 }}
+                className="border-gray-300 text-gray-700 hover:bg-gray-50 px-5"
               >
                 Cancel
               </Button>
-              <Button type="submit">
+              <Button 
+                type="submit"
+                className="bg-blue-500 hover:bg-blue-600 px-5"
+              >
                 Record Purchase
               </Button>
             </div>

@@ -10,14 +10,12 @@ export default function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({
+  const [error, setError] = useState(null);  const [showForm, setShowForm] = useState(false);  const [formData, setFormData] = useState({
     name: '',
     category_id: '',
-    price: '',
     quantity: '',
-    reorder_level: ''
+    reorder_level: '',
+    profit_percentage: '30'
   });
   const [isEditing, setIsEditing] = useState(false);
   const [currentProductId, setCurrentProductId] = useState(null);
@@ -51,14 +49,13 @@ export default function ProductsPage() {
 
     fetchData();
   }, []);
-
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     let parsedValue = value;
     
     // Convert numeric fields to numbers
-    if (name === 'price' || name === 'quantity' || name === 'reorder_level') {
+    if (name === 'quantity' || name === 'reorder_level' || name === 'profit_percentage') {
       parsedValue = value === '' ? '' : Number(value);
     }
     
@@ -66,16 +63,14 @@ export default function ProductsPage() {
       ...formData,
       [name]: parsedValue
     });
-  };
-
-  // Reset form
+  };  // Reset form
   const resetForm = () => {
     setFormData({
       name: '',
       category_id: '',
-      price: '',
       quantity: '',
-      reorder_level: ''
+      reorder_level: '',
+      profit_percentage: '30'
     });
     setIsEditing(false);
     setCurrentProductId(null);
@@ -86,18 +81,16 @@ export default function ProductsPage() {
     setAlertInfo({ type, message });
     setTimeout(() => setAlertInfo(null), 5000); // Auto-dismiss after 5 seconds
   };
-
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    try {
-      const productData = {
+    try {      const productData = {
         name: formData.name,
         category_id: Number(formData.category_id),
-        price: Number(formData.price),
         quantity: Number(formData.quantity || 0),
-        reorder_level: Number(formData.reorder_level || 10)
+        reorder_level: Number(formData.reorder_level || 10),
+        profit_percentage: Number(formData.profit_percentage || 30)
       };
       
       if (isEditing && currentProductId) {
@@ -120,15 +113,14 @@ export default function ProductsPage() {
       console.error('Product save error:', err);
     }
   };
-
   // Handle edit product
   const handleEdit = (product) => {
-    setFormData({
+    setFormData({      
       name: product.name,
       category_id: product.category_id.toString(),
-      price: product.price.toString(),
       quantity: product.quantity.toString(),
-      reorder_level: product.reorder_level.toString()
+      reorder_level: product.reorder_level.toString(),
+      profit_percentage: product.profit_percentage ? product.profit_percentage.toString() : '30'
     });
     setIsEditing(true);
     setCurrentProductId(product.product_id);
@@ -183,13 +175,11 @@ export default function ProductsPage() {
         const bCat = categories.find(c => c.category_id === b.category_id)?.name;
         aValue = aCat?.toLowerCase() || '';
         bValue = bCat?.toLowerCase() || '';
-      } else {
-        // Normal field
+      } else {        // Normal field
         aValue = a[sortField];
         bValue = b[sortField];
-        
-        // Handle numeric fields by explicitly converting to numbers
-        if (['product_id', 'price', 'quantity', 'reorder_level'].includes(sortField)) {
+          // Handle numeric fields by explicitly converting to numbers
+        if (['product_id', 'price', 'base_price', 'quantity', 'reorder_level', 'profit_percentage'].includes(sortField)) {
           aValue = parseFloat(aValue) || 0;
           bValue = parseFloat(bValue) || 0;
         } else if (typeof aValue === 'string') {
@@ -207,18 +197,28 @@ export default function ProductsPage() {
       const comparison = aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-  };
-
-  // Table columns definition - sortable flags added correctly
+  };  // Table columns definition - sortable flags added correctly
   const columns = [
     { field: 'product_id', header: 'ID', sortable: true },
     { field: 'name', header: 'Name', sortable: true },
     { field: 'category_name', header: 'Category', sortable: true },
+    {
+      field: 'base_price',
+      header: 'Base Price',
+      sortable: true,
+      render: (row) => `$${Number(row.base_price || 0).toFixed(2)}`
+    },
     { 
       field: 'price', 
-      header: 'Price', 
+      header: 'Sale Price', 
       sortable: true,
       render: (row) => `$${Number(row.price || 0).toFixed(2)}`
+    },
+    {
+      field: 'profit_percentage',
+      header: 'Profit %',
+      sortable: true,
+      render: (row) => `${Number(row.profit_percentage || 0).toFixed(0)}%`
     },
     { field: 'quantity', header: 'Stock', sortable: true },
     { 
@@ -289,13 +289,11 @@ export default function ProductsPage() {
           message={alertInfo.message} 
           onClose={() => setAlertInfo(null)} 
         />
-      )}
-
-      {/* Product form - Updated with enhanced theme */}
+      )}      {/* Product form - Updated with enhanced theme */}
       {showForm && (
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg sm:rounded-lg p-6 mb-6 border border-blue-200">
-          <div className="flex items-center mb-6 border-b border-blue-200 pb-4">
-            <div className={`p-3 rounded-full ${isEditing ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'} mr-4`}>
+        <div className="bg-white shadow-xl sm:rounded-lg p-8 mb-6 border border-gray-100">
+          <div className="flex items-center mb-6 border-b border-gray-100 pb-4">
+            <div className="p-3 rounded-full bg-blue-50 text-blue-500 mr-4">
               {isEditing ? (
                 <PencilIcon className="h-6 w-6" />
               ) : (
@@ -308,12 +306,12 @@ export default function ProductsPage() {
           </div>
           
           <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+            <div className="grid grid-cols-1 gap-y-6 gap-x-6 sm:grid-cols-6">
               <div className="sm:col-span-3">
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                   Product Name
                 </label>
-                <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="mt-1 relative">
                   <input
                     type="text"
                     name="name"
@@ -321,7 +319,7 @@ export default function ProductsPage() {
                     value={formData.name}
                     onChange={handleInputChange}
                     required
-                    className="focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md bg-white"
+                    className="focus:ring-blue-500 focus:border-blue-500 block w-full px-4 py-3 sm:text-sm border border-gray-200 rounded-lg bg-gray-50 transition-colors"
                     placeholder="Enter product name"
                   />
                 </div>
@@ -331,14 +329,14 @@ export default function ProductsPage() {
                 <label htmlFor="category_id" className="block text-sm font-medium text-gray-700">
                   Category
                 </label>
-                <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="mt-1 relative">
                   <select
                     id="category_id"
                     name="category_id"
                     value={formData.category_id}
                     onChange={handleInputChange}
                     required
-                    className="focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md bg-white"
+                    className="focus:ring-blue-500 focus:border-blue-500 block w-full px-4 py-3 sm:text-sm border border-gray-200 rounded-lg bg-gray-50 transition-colors"
                   >
                     <option value="">Select a category</option>
                     {categories.map(category => (
@@ -351,33 +349,10 @@ export default function ProductsPage() {
               </div>
 
               <div className="sm:col-span-2">
-                <label htmlFor="price" className="block text-sm font-medium text-gray-700">
-                  Price ($)
-                </label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500 sm:text-sm">$</span>
-                  </div>
-                  <input
-                    type="number"
-                    name="price"
-                    id="price"
-                    min="0"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={handleInputChange}
-                    required
-                    className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 sm:text-sm border-gray-300 rounded-md bg-white"
-                    placeholder="0.00"
-                  />
-                </div>
-              </div>
-
-              <div className="sm:col-span-2">
                 <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">
                   Quantity
                 </label>
-                <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="mt-1 relative">
                   <input
                     type="number"
                     name="quantity"
@@ -385,17 +360,17 @@ export default function ProductsPage() {
                     min="0"
                     value={formData.quantity}
                     onChange={handleInputChange}
-                    className="focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md bg-white"
+                    className="focus:ring-blue-500 focus:border-blue-500 block w-full px-4 py-3 sm:text-sm border border-gray-200 rounded-lg bg-gray-50 transition-colors"
                     placeholder="0"
                   />
                 </div>
               </div>
-
+              
               <div className="sm:col-span-2">
                 <label htmlFor="reorder_level" className="block text-sm font-medium text-gray-700">
                   Reorder Level
                 </label>
-                <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="mt-1 relative">
                   <input
                     type="number"
                     name="reorder_level"
@@ -403,14 +378,31 @@ export default function ProductsPage() {
                     min="0"
                     value={formData.reorder_level}
                     onChange={handleInputChange}
-                    className="focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md bg-white"
+                    className="focus:ring-blue-500 focus:border-blue-500 block w-full px-4 py-3 sm:text-sm border border-gray-200 rounded-lg bg-gray-50 transition-colors"
                     placeholder="10"
                   />
                 </div>
               </div>
-            </div>
 
-            <div className="mt-8 pt-4 border-t border-blue-200 flex justify-end space-x-3">
+              <div className="sm:col-span-2">
+                <label htmlFor="profit_percentage" className="block text-sm font-medium text-gray-700">
+                  Profit Percentage (%)
+                </label>
+                <div className="mt-1 relative">
+                  <input
+                    type="number"
+                    name="profit_percentage"
+                    id="profit_percentage"
+                    min="0"
+                    max="100"
+                    value={formData.profit_percentage}
+                    onChange={handleInputChange}
+                    className="focus:ring-blue-500 focus:border-blue-500 block w-full px-4 py-3 sm:text-sm border border-gray-200 rounded-lg bg-gray-50 transition-colors"
+                    placeholder="30"
+                  />
+                </div>
+              </div>
+            </div>            <div className="mt-8 pt-5 border-t border-gray-100 flex justify-end space-x-4">
               <Button
                 type="button"
                 variant="outline"
@@ -418,13 +410,13 @@ export default function ProductsPage() {
                   resetForm();
                   setShowForm(false);
                 }}
-                className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                className="border-gray-300 text-gray-700 hover:bg-gray-50 px-5"
               >
                 Cancel
               </Button>
               <Button 
                 type="submit"
-                className={`${isEditing ? 'bg-amber-600 hover:bg-amber-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+                className="bg-blue-500 hover:bg-blue-600 px-5"
               >
                 {isEditing ? 'Update Product' : 'Create Product'}
               </Button>
