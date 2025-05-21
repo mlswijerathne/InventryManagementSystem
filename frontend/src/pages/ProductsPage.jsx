@@ -291,19 +291,29 @@ export default function ProductsPage() {
         />
       )}
 
-      {/* Product form */}
+      {/* Product form - Updated with enhanced theme */}
       {showForm && (
-        <div className="bg-white shadow sm:rounded-lg p-6 mb-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">
-            {isEditing ? 'Edit Product' : 'Add New Product'}
-          </h2>
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg sm:rounded-lg p-6 mb-6 border border-blue-200">
+          <div className="flex items-center mb-6 border-b border-blue-200 pb-4">
+            <div className={`p-3 rounded-full ${isEditing ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'} mr-4`}>
+              {isEditing ? (
+                <PencilIcon className="h-6 w-6" />
+              ) : (
+                <PlusIcon className="h-6 w-6" />
+              )}
+            </div>
+            <h2 className="text-xl font-semibold text-gray-800">
+              {isEditing ? 'Edit Product' : 'Add New Product'}
+            </h2>
+          </div>
+          
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
               <div className="sm:col-span-3">
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                   Product Name
                 </label>
-                <div className="mt-1">
+                <div className="mt-1 relative rounded-md shadow-sm">
                   <input
                     type="text"
                     name="name"
@@ -311,7 +321,8 @@ export default function ProductsPage() {
                     value={formData.name}
                     onChange={handleInputChange}
                     required
-                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md bg-white"
+                    placeholder="Enter product name"
                   />
                 </div>
               </div>
@@ -320,14 +331,14 @@ export default function ProductsPage() {
                 <label htmlFor="category_id" className="block text-sm font-medium text-gray-700">
                   Category
                 </label>
-                <div className="mt-1">
+                <div className="mt-1 relative rounded-md shadow-sm">
                   <select
                     id="category_id"
                     name="category_id"
                     value={formData.category_id}
                     onChange={handleInputChange}
                     required
-                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md bg-white"
                   >
                     <option value="">Select a category</option>
                     {categories.map(category => (
@@ -343,7 +354,10 @@ export default function ProductsPage() {
                 <label htmlFor="price" className="block text-sm font-medium text-gray-700">
                   Price ($)
                 </label>
-                <div className="mt-1">
+                <div className="mt-1 relative rounded-md shadow-sm">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 sm:text-sm">$</span>
+                  </div>
                   <input
                     type="number"
                     name="price"
@@ -353,7 +367,8 @@ export default function ProductsPage() {
                     value={formData.price}
                     onChange={handleInputChange}
                     required
-                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 sm:text-sm border-gray-300 rounded-md bg-white"
+                    placeholder="0.00"
                   />
                 </div>
               </div>
@@ -362,7 +377,7 @@ export default function ProductsPage() {
                 <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">
                   Quantity
                 </label>
-                <div className="mt-1">
+                <div className="mt-1 relative rounded-md shadow-sm">
                   <input
                     type="number"
                     name="quantity"
@@ -370,7 +385,8 @@ export default function ProductsPage() {
                     min="0"
                     value={formData.quantity}
                     onChange={handleInputChange}
-                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md bg-white"
+                    placeholder="0"
                   />
                 </div>
               </div>
@@ -379,7 +395,7 @@ export default function ProductsPage() {
                 <label htmlFor="reorder_level" className="block text-sm font-medium text-gray-700">
                   Reorder Level
                 </label>
-                <div className="mt-1">
+                <div className="mt-1 relative rounded-md shadow-sm">
                   <input
                     type="number"
                     name="reorder_level"
@@ -387,13 +403,14 @@ export default function ProductsPage() {
                     min="0"
                     value={formData.reorder_level}
                     onChange={handleInputChange}
-                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md bg-white"
+                    placeholder="10"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end space-x-3">
+            <div className="mt-8 pt-4 border-t border-blue-200 flex justify-end space-x-3">
               <Button
                 type="button"
                 variant="outline"
@@ -401,10 +418,14 @@ export default function ProductsPage() {
                   resetForm();
                   setShowForm(false);
                 }}
+                className="border-gray-300 text-gray-700 hover:bg-gray-50"
               >
                 Cancel
               </Button>
-              <Button type="submit">
+              <Button 
+                type="submit"
+                className={`${isEditing ? 'bg-amber-600 hover:bg-amber-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+              >
                 {isEditing ? 'Update Product' : 'Create Product'}
               </Button>
             </div>

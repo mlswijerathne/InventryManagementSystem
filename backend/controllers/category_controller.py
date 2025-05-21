@@ -3,6 +3,7 @@ Category controller for the Inventory Management System
 """
 from flask import Blueprint, jsonify, request
 from models.category import Category
+from models import query_db
 
 category_bp = Blueprint('category', __name__)
 
@@ -123,9 +124,29 @@ def delete_category(category_id):
 def get_category_products(category_id):
     """Get products in a category"""
     try:
+        print(f"Fetching products for category ID: {category_id}")
         category = Category.get_with_products(category_id)
         if not category:
+            print(f"Category not found: {category_id}")
             return jsonify({"success": False, "error": "Category not found"}), 404
+        print(f"Found category: {category['name']} with {len(category['products'])} products")
         return jsonify({"success": True, "data": category}), 200
     except Exception as e:
+        print(f"Error in get_category_products: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@category_bp.route('/test-connection', methods=['GET'])
+def test_category_connection():
+    """Test database connection from category controller"""
+    try:
+        # Try to execute a simple query
+        categories = query_db("SELECT TOP 1 * FROM category")
+        return jsonify({
+            "success": True, 
+            "message": "Database connection is working correctly",
+            "data": categories
+        }), 200
+    except Exception as e:
+        print(f"Database connection test error: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500

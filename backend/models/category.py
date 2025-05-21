@@ -81,31 +81,33 @@ class Category:
         execute_db("DELETE FROM category WHERE category_id = ?", [category_id])
         return category_id
     
-
-
     @staticmethod
     def get_with_products(category_id):
         """Get a category with its products"""
-        category = Category.get_by_id(category_id)
-        if not category:
-            return None
-        
-        products = query_db("""
-            SELECT 
-                p.product_id, 
-                p.name, 
-                p.price, 
-                p.quantity, 
-                p.reorder_level,
-                CASE 
-                    WHEN p.quantity <= p.reorder_level THEN 'Low Stock'
-                    WHEN p.quantity = 0 THEN 'Out of Stock'
-                    ELSE 'In Stock'
-                END AS stock_status
-            FROM product p
-            WHERE p.category_id = ?
-            ORDER BY p.name
-        """, [category_id])
-        
-        category['products'] = products
-        return category
+        try:
+            category = Category.get_by_id(category_id)
+            if not category:
+                return None
+            
+            products = query_db("""
+                SELECT 
+                    p.product_id, 
+                    p.name, 
+                    p.price, 
+                    p.quantity, 
+                    p.reorder_level,
+                    CASE 
+                        WHEN p.quantity <= p.reorder_level THEN 'Low Stock'
+                        WHEN p.quantity = 0 THEN 'Out of Stock'
+                        ELSE 'In Stock'
+                    END AS stock_status
+                FROM product p
+                WHERE p.category_id = ?
+                ORDER BY p.name
+            """, [category_id])
+            
+            category['products'] = products
+            return category
+        except Exception as e:
+            print(f"Error in get_with_products: {str(e)}")
+            raise

@@ -60,6 +60,7 @@ def create_product():
 
 
 
+@product_bp.route('/<int:product_id>/', methods=['PUT'])
 @product_bp.route('/<int:product_id>', methods=['PUT'])
 def update_product(product_id):
     """Update a product"""
@@ -92,6 +93,7 @@ def update_product(product_id):
 
 
 
+@product_bp.route('/<int:product_id>/', methods=['DELETE'])
 @product_bp.route('/<int:product_id>', methods=['DELETE'])
 def delete_product(product_id):
     """Delete a product"""

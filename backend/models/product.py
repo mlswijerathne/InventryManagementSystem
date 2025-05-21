@@ -48,18 +48,46 @@ class Product:
                 (SELECT CASE 
                     WHEN AVG(purchase_price) IS NULL OR AVG(purchase_price) = 0 THEN 0
                     ELSE ((SELECT AVG(sale_price) FROM sale WHERE product_id = p.product_id) - AVG(purchase_price)) / AVG(purchase_price) * 100
-                 END FROM purchase WHERE product_id = p.product_id) AS profit_margin
-            FROM product p
+                 END FROM purchase WHERE product_id = p.product_id) AS profit_margin            FROM product p
             JOIN category c ON p.category_id = c.category_id
             WHERE p.product_id = ?
         """, [product_id], True)
-    
     @staticmethod
     def get_low_stock():
         """Get products with low stock"""
-        return query_db("""
-            SELECT * FROM view_low_stock
-        """)
+        try:
+            # Use a direct query instead of view for more reliability
+            results = query_db("""
+                SELECT 
+                    p.product_id,
+                    p.name AS product_name,
+                    c.name AS category_name,
+                    p.quantity,
+                    p.reorder_level,
+                    p.price
+                FROM 
+                    product p
+                JOIN 
+                    category c ON p.category_id = c.category_id
+                WHERE 
+                    p.quantity <= p.reorder_level
+                ORDER BY 
+                    (p.reorder_level - p.quantity) DESC
+            """)
+            
+            print(f"Low stock query returned {len(results) if results else 0} items")
+            
+            # If we got None instead of an empty list, return empty list
+            if results is None:
+                print("Query returned None, converting to empty list")
+                return []
+                
+            return results
+        except Exception as e:
+            print(f"Error in get_low_stock: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return []
     
     @staticmethod
     def create(name, category_id, price, quantity, reorder_level):

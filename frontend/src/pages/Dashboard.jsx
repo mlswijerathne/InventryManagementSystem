@@ -11,18 +11,49 @@ ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, Title, Tool
 export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
+  const [error, setError] = useState(null);  useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
+        console.log('Fetching dashboard data...');
         const response = await dashboardApi.getDashboardOverview();
-        setDashboardData(response.data.data);
+        console.log('Dashboard API response:', response);
+        
+        // Ensure low_stock exists and is an array
+        if (response.data && response.data.data) {
+          const dashboardData = response.data.data;
+          
+          // If low_stock isn't present or isn't an array, initialize it as an empty array
+          if (!dashboardData.low_stock || !Array.isArray(dashboardData.low_stock)) {
+            console.warn('Low stock products array is empty or invalid, initializing as empty array');
+            dashboardData.low_stock = [];
+          }
+          
+          console.log('Dashboard data loaded:', dashboardData);
+          console.log('Low stock products count:', dashboardData.low_stock.length);
+          
+          setDashboardData(dashboardData);
+        } else {
+          console.warn('Dashboard data has unexpected structure:', response.data);
+          // Initialize with empty values to prevent rendering errors
+          setDashboardData({
+            inventory_summary: {},
+            low_stock: [],
+            top_selling: [],
+            sales_by_category: []
+          });
+        }
         setError(null);
       } catch (err) {
         setError('Failed to load dashboard data. Please try again later.');
         console.error('Dashboard data fetch error:', err);
+        // Initialize with empty values to prevent rendering errors
+        setDashboardData({
+          inventory_summary: {},
+          low_stock: [],
+          top_selling: [],
+          sales_by_category: []
+        });
       } finally {
         setLoading(false);
       }
@@ -46,9 +77,13 @@ export default function Dashboard() {
   if (!dashboardData) {
     return <Alert type="info" message="No dashboard data available." />;
   }
-
-  // Extract data from response
-  const { inventory_summary, low_stock, top_selling, sales_by_category } = dashboardData;
+  // Extract data from response with safe fallbacks
+  const { 
+    inventory_summary = {}, 
+    low_stock = [], 
+    top_selling = [], 
+    sales_by_category = [] 
+  } = dashboardData || {};
   // Prepare data for charts
   const salesByCategoryData = {
     labels: sales_by_category.map(item => item.category_name),
@@ -151,10 +186,14 @@ export default function Dashboard() {
                 </svg>
               </div>
               <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Low Stock Items</dt>
+                <dl>                  <dt className="text-sm font-medium text-gray-500 truncate">Low Stock Items</dt>
                   <dd className="flex items-center">
                     <div className="text-lg font-medium text-gray-900">{low_stock?.length || 0}</div>
+                    {low_stock?.length > 0 && (
+                      <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        Attention needed
+                      </span>
+                    )}
                   </dd>
                 </dl>
               </div>
@@ -219,14 +258,19 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Low stock products */}
+      </div>      {/* Low stock products */}
       <div className="bg-white overflow-hidden shadow rounded-lg">
         <div className="px-5 py-4 border-b border-gray-200">
           <h2 className="text-lg font-medium text-gray-900">Low Stock Products</h2>
         </div>
         <div className="p-5">
+          {/* Show warning if there are out-of-stock products */}
+          {low_stock && low_stock.some(p => p.quantity === 0) && (
+            <div className="mb-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded relative">
+              <span className="font-bold">Warning:</span> Some products are out of stock. Consider placing a purchase order immediately.
+            </div>
+          )}
+          
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead>
@@ -263,10 +307,13 @@ export default function Dashboard() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {product.reorder_level}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                          Low Stock
+                      </td>                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          product.quantity === 0 
+                            ? 'bg-red-100 text-red-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {product.quantity === 0 ? 'Out of Stock' : 'Low Stock'}
                         </span>
                       </td>
                     </tr>

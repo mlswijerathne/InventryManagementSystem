@@ -32,38 +32,75 @@ export default function ReportsPage() {
   const [lowStockProducts, setLowStockProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
+
   useEffect(() => {
     const fetchReportData = async () => {
       try {
         setLoading(true);
         setError(null);
         
-        const [salesByCategoryRes, topSellingRes, lowStockRes] = await Promise.all([
-          dashboardApi.getSalesByCategory(),
-          dashboardApi.getTopSelling(),
-          dashboardApi.getLowStock()
-        ]);
+        // Fetch each report separately instead of using Promise.all
+        // This prevents one slow endpoint from affecting others
+        try {
+          const salesByCategoryRes = await dashboardApi.getSalesByCategory();
+          if (salesByCategoryRes.data?.success) {
+            setSalesByCategory(salesByCategoryRes.data.data || []);
+          }
+        } catch (err) {
+          console.error('Sales by category fetch error:', err);
+          // Continue with other requests even if this one fails
+        }
         
-        if (salesByCategoryRes.data?.success && topSellingRes.data?.success && lowStockRes.data?.success) {
-          setSalesByCategory(salesByCategoryRes.data.data || []);
-          setTopSellingProducts(topSellingRes.data.data || []);
-          setLowStockProducts(lowStockRes.data.data || []);
-        } else {
-          throw new Error('Failed to fetch report data');
+        try {
+          const topSellingRes = await dashboardApi.getTopSelling();
+          if (topSellingRes.data?.success) {
+            setTopSellingProducts(topSellingRes.data.data || []);
+          }
+        } catch (err) {
+          console.error('Top selling products fetch error:', err);
+          // Continue with other requests even if this one fails
+        }
+        
+        try {
+          const lowStockRes = await dashboardApi.getLowStock();
+          if (lowStockRes.data?.success) {
+            setLowStockProducts(lowStockRes.data.data || []);
+          }
+        } catch (err) {
+          console.error('Low stock products fetch error:', err);
+          // Continue with other requests even if this one fails
+        }
+        
+        // Check if we have at least some data
+        if (salesByCategory.length === 0 && topSellingProducts.length === 0 && lowStockProducts.length === 0) {
+          throw new Error('No report data could be retrieved');
         }
       } catch (err) {
         console.error('Report data fetch error:', err);
-        setError('Failed to load report data. Please try again later.');
-        setSalesByCategory([]);
-        setTopSellingProducts([]);
-        setLowStockProducts([]);
+        
+        // Set appropriate error message based on the error type
+        if (err.code === 'ECONNABORTED') {
+          setError('Request timed out. The server might be busy. Please try again later.');
+        } else if (err.message.includes('Network Error')) {
+          setError('Network error. Please check your connection and try again.');
+        } else {
+          setError('Failed to load report data. Please try again later.');
+        }
+        
+        // Keep any data we successfully loaded
       } finally {
         setLoading(false);
       }
     };
 
     fetchReportData();
-  }, []);
+  }, [retryCount]);
+  
+  // Add a retry button for user to manually retry
+  const handleRetry = () => {
+    setRetryCount(prevCount => prevCount + 1);
+  };
 
   if (loading) {
     return (
@@ -73,8 +110,21 @@ export default function ReportsPage() {
     );
   }
 
-  if (error) {
-    return <Alert type="error" message={error} />;
+  // Complete error - no data available
+  if (error && salesByCategory.length === 0 && topSellingProducts.length === 0 && lowStockProducts.length === 0) {
+    return (
+      <div className="p-4">
+        <Alert type="error" message={error} />
+        <div className="mt-4 text-center">
+          <button 
+            onClick={handleRetry}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+          >
+            Retry Loading Reports
+          </button>
+        </div>
+      </div>
+    );
   }
 
   // Prepare data for sales by category chart
@@ -102,7 +152,7 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 p-6">
       <div>
         <h1 className="text-2xl font-semibold text-gray-900">Reports</h1>
         <p className="mt-1 text-sm text-gray-500">
@@ -110,65 +160,90 @@ export default function ReportsPage() {
         </p>
       </div>
 
+      {/* Show warning if some data is missing */}
+      {error && (
+        <div className="mb-4">
+          <Alert type="warning" message={`${error} Some reports may still be available below.`} />
+        </div>
+      )}
+
       {/* Sales by Category */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-medium mb-4">Sales by Category</h2>
-        <div className="h-80">
-          <Bar
-            data={salesByCategoryData}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              scales: {
-                y: {
-                  beginAtZero: true,
+      {salesByCategory.length > 0 ? (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-medium mb-4">Sales by Category</h2>
+          <div className="h-80">
+            <Bar
+              data={salesByCategoryData}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    title: {
+                      display: true,
+                      text: 'Total Sales ($)'
+                    }
+                  }
+                },
+                plugins: {
+                  legend: {
+                    display: false
+                  },
                   title: {
-                    display: true,
-                    text: 'Total Sales ($)'
+                    display: false
                   }
                 }
-              },
-              plugins: {
-                legend: {
-                  display: false
-                },
-                title: {
-                  display: false
-                }
-              }
-            }}
-          />
+              }}
+            />
+          </div>
         </div>
-      </div>
+      ) : !loading && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-medium mb-4">Sales by Category</h2>
+          <div className="h-80 flex items-center justify-center">
+            <p className="text-gray-500">Sales by category data is not available</p>
+          </div>
+        </div>
+      )}
 
       {/* Top Selling Products */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-medium mb-4">Top Selling Products</h2>
-        <div className="h-80">
-          <Bar
-            data={topSellingData}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              indexAxis: 'y',
-              scales: {
-                x: {
-                  beginAtZero: true,
-                  title: {
-                    display: true,
-                    text: 'Units Sold'
+      {topSellingProducts.length > 0 ? (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-medium mb-4">Top Selling Products</h2>
+          <div className="h-80">
+            <Bar
+              data={topSellingData}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                scales: {
+                  x: {
+                    beginAtZero: true,
+                    title: {
+                      display: true,
+                      text: 'Units Sold'
+                    }
+                  }
+                },
+                plugins: {
+                  legend: {
+                    display: false
                   }
                 }
-              },
-              plugins: {
-                legend: {
-                  display: false
-                }
-              }
-            }}
-          />
+              }}
+            />
+          </div>
         </div>
-      </div>
+      ) : !loading && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-medium mb-4">Top Selling Products</h2>
+          <div className="h-80 flex items-center justify-center">
+            <p className="text-gray-500">Top selling products data is not available</p>
+          </div>
+        </div>
+      )}
 
       {/* Low Stock Products */}
       <div className="bg-white rounded-lg shadow p-6">
@@ -232,6 +307,18 @@ export default function ReportsPage() {
           </table>
         </div>
       </div>
+
+      {/* Retry button at the bottom if there was a partial error */}
+      {(error || (!salesByCategory.length || !topSellingProducts.length || !lowStockProducts.length)) && !loading && (
+        <div className="mt-6 text-center">
+          <button 
+            onClick={handleRetry}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+          >
+            Refresh Reports
+          </button>
+        </div>
+      )}
     </div>
   );
 }

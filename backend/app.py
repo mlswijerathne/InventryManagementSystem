@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, g
+from flask import Flask, jsonify, g, request
 from flask_cors import CORS
 import pyodbc
 import os
@@ -14,9 +14,10 @@ from controllers.dashboard_controller import dashboard_bp
 app = Flask(__name__)
 
 # Enable CORS for all routes with appropriate configuration
-CORS(app, origins="http://localhost:5173", 
-     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-     allow_headers=["Content-Type", "Authorization"],
+CORS(app, 
+     origins=["http://localhost:5173", "http://localhost:5174"],
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"], 
+     allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
      supports_credentials=True)
 
 # Set up database connection handlers
@@ -59,13 +60,25 @@ def home():
 # Add custom headers if needed
 @app.after_request
 def after_request(response):
+    # Don't add CORS headers if they already exist
+    # This prevents duplication with Flask-CORS
+    if 'Access-Control-Allow-Origin' not in response.headers:
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
     return response
 
 # Handle OPTIONS requests globally
 @app.route('/<path:path>', methods=['OPTIONS'])
 @app.route('/', methods=['OPTIONS'])
 def handle_options(path=''):
-    return '', 204
+    response = app.make_response('')
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    return response
 
 # Error handlers
 @app.errorhandler(404)
