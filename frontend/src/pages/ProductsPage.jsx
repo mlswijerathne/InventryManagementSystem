@@ -348,7 +348,7 @@ export default function ProductsPage() {
                 </div>
               </div>
 
-              <div className="sm:col-span-2">
+              {/* <div className="sm:col-span-2">
                 <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">
                   Quantity
                 </label>
@@ -364,7 +364,7 @@ export default function ProductsPage() {
                     placeholder="0"
                   />
                 </div>
-              </div>
+              </div> */}
               
               <div className="sm:col-span-2">
                 <label htmlFor="reorder_level" className="block text-sm font-medium text-gray-700">
