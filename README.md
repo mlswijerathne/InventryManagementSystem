@@ -23,6 +23,18 @@ A **modern, full-featured inventory management system** for businesses of any si
 
 ---
 
+## 🖼️ User Interfaces
+
+| Dashboard | 
+|-----------|
+| ![Dashboard](assets/dashboard.png) |
+
+|  Reports  |
+|-----------|
+| ![Reports](assets/report.png) |
+
+---
+
 ## 🛠️ Technology Stack
 
 **Backend**
@@ -200,12 +212,4 @@ Dashboard
 
 
 
----
 
-## 🖼️ Screenshots
-
-
-
-| Dashboard | Reports |
-|-----------|---------|
-| ![Dashboard](assest/dashboard.png) | ![Reports](assest/reports.png) |
