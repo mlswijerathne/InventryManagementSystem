@@ -29,6 +29,10 @@ A **modern, full-featured inventory management system** for businesses of any si
 |-----------|
 | ![Dashboard](assets/dashboard.png) |
 
+<p>
+  <img src="assets/dashboard.png" alt="Dashboard"/>
+</p>
+
 |  Reports  |
 |-----------|
 | ![Reports](assets/report.png) |
