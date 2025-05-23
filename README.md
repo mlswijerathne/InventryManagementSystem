@@ -204,8 +204,8 @@ Dashboard
 
 ## 🖼️ Screenshots
 
-> _Replace these with your actual screenshots!_
 
-| Dashboard | Products | Categories | Sales | Reports |
-|-----------|----------|------------|-------|---------|
-| ![Dashboard](path/to/dashboard_screenshot.png) | ![Products](path/to/products_screenshot.png) | ![Categories](path/to/categories_screenshot.png) | ![Sales](path/to/sales_screenshot.png) | ![Reports](path/to/reports_screenshot.png) |
+
+| Dashboard | Reports |
+|-----------|---------|
+| ![Dashboard](assest/dashboard.png) | ![Reports](assest/reports.png) |
