@@ -82,6 +82,18 @@ Backend (Flask API)    Frontend (React)
 - **utils/**: Helpers & formatters
 
 ---
+## Team Members
+
+<div align="left">
+
+| <img src="https://github.com/mlswijerathne.png" width="50px" height="50px"/> | <img src="https://github.com/AHLDTminusha.png" width="50px" height="50px"/> | <img src="https://github.com/Dananjana03.png" width="50px" height="50px"/> | <img src="https://github.com/jmbrathnayke.png" width="50px" height="50px"/> | <img src="https://github.com/lakshyieS.png" width="50px" height="50px"/> | <img src="https://github.com/Nipuna7.png" width="50px" height="50px"/> | <img src="https://github.com/PemiduHerath.png" width="50px" height="50px"/> | <img src="https://github.com/thanushkadilhara.png" width="50px" height="50px"/> |
+|:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:|
+| **Lakshitha Wijerathne** | **Pemidu Ranisha Herath** | **Manujaya Rathnayake** | **Thisara Rupasinghe** | **Nirodha Gunasinghe** | **Jayani Adikari** | **Minusha Athapaththu** | **thanushkadilhara** | **Maleesha Devindi** |
+| [@mlswijerathne](https://github.com/mlswijerathne) | [@PemiduHerath](https://github.com/PemiduHerath) | [@jmbrathnayke](https://github.com/jmbrathnayke) | [@dtdrupasinghe](https://github.com/dtdrupasinghe) | [[@Nipuna7](https://github.com/Nipuna7) | [@JMAdikari](https://github.com/JMAdikari) | [@AHLDTminusha](https://github.com/AHLDTminusha) | [@thanushkadilhara](https://github.com/thanushkadilhara) |  [@samdevindi](https://github.com/samdevindi) |
+
+</div>
+
+---
 
 ## ⚡ Quick Start
 
